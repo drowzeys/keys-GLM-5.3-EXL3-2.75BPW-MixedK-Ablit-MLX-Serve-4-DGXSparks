@@ -1,4 +1,4 @@
-# keys-GLM 5.3 EXL3 2.75BPW MixedK Ablit · MLX-Serve + TF Engine · 4 DGX Sparks
+# keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-TF-Engine-4-DGXSparks
 
 # Built on [TensorFold 1.0.5](https://github.com/ashhart/TensorFold) by Ash Hart and [mlx-serve](https://github.com/ddalcu/mlx-serve) by David Dalcu
 
