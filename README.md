@@ -1,4 +1,4 @@
-# keys-GLM 5.3 EXL3 2.75BPW MixedK Ablit · TF Engine · 4 DGX Sparks
+# keys-GLM 5.3 EXL3 2.75BPW MixedK Ablit · MLX-Serve + TF Engine · 4 DGX Sparks
 
 # Built on [TensorFold 1.0.5](https://github.com/ashhart/TensorFold) by Ash Hart and [mlx-serve](https://github.com/ddalcu/mlx-serve) by David Dalcu
 
@@ -52,7 +52,7 @@ binaries just before they were packaged (`long-replies.log`); the rest ran on th
 On a machine with passwordless ssh to the four Sparks:
 
 ```sh
-git clone https://github.com/drowzeys/keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-TF-Engine-4-DGXSparks && cd keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-TF-Engine-4-DGXSparks
+git clone https://github.com/drowzeys/keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-TF-Engine-4-DGXSparks && cd keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-TF-Engine-4-DGXSparks
 export NODES="10.0.0.1 10.0.0.2 10.0.0.3 10.0.0.4"      # fabric addresses, rank 0 first
 export MODEL=/models/keys-GLM-5.3-EXL3-2.75BPW-Abliterated  # the same path on all four
 
