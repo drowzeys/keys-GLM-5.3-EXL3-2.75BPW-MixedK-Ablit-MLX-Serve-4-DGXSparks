@@ -9,6 +9,7 @@
 #   DRAFTER  dspark (the DSpark ft2 drafter in the image, default) | mtp (GLM-5.3's own MTP layer) |
 #            dflash (DRAFT=<a DFlash2 directory on all four>; CC BY-NC-ND, you download it yourself)
 #   CONTEXT [32768]  PARALLEL [4]  PORT [18992]  RAILS [2]  MEM [110g]  RDV [29882] (rank rendezvous port)
+#   DOCKER_ARGS  extra `docker run` arguments for every rank (e.g. -v a kernel pack for another context)
 set -u
 read -r -a NODES <<<"${NODES:-}"
 [ ${#NODES[@]} = 4 ] || { echo "NODES must list four fabric addresses, rank 0 first"; exit 2; }
@@ -94,7 +95,7 @@ rank_env() {
   # any TF_GLM53_* you export reaches every rank
   for v in $(compgen -v TF_GLM53_); do e="$e -e $v=${!v}"; done; echo "$e"
 }
-flags="--label keys-glm53=1 --user \$(id -u):\$(id -g) -e HOME=/tmp --gpus all --network host --ipc host --device /dev/infiniband --ulimit memlock=-1 --cap-add IPC_LOCK --memory $MEM --memory-swap $MEM"
+flags="--label keys-glm53=1 --user \$(id -u):\$(id -g) -e HOME=/tmp --gpus all --network host --ipc host --device /dev/infiniband --ulimit memlock=-1 --cap-add IPC_LOCK --memory $MEM --memory-swap $MEM ${DOCKER_ARGS:-}"
 for r in 0 1 2 3; do a=$(avail ${NODES[$r]}); [ "${a:-0}" -ge 100 ] || { say "${NODES[$r]} has ${a} GB available (< 100): stop other jobs, drop page cache"; exit 1; }; done
 # GB10's GPU allocations can only use free memory: drop clean page cache on the nodes while the ranks load
 ( until [ -e $RUN/STOP ] || [ -e $RUN/SERVING ]; do for n in "${NODES[@]}"; do rsh $n 'sudo -n sysctl -q -w vm.drop_caches=1' >/dev/null 2>&1; done; sleep 10; done ) &
