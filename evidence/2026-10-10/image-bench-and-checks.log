@@ -1,0 +1,31 @@
+prose: 38.1 tok/s (runs 38.1, 38.1; 512 tokens; text 02f2a26e)
+code: 56.2 tok/s (runs 56.2, 56.1; 512 tokens; text 7cb95e5c)
+--- stop
+short answer: finish=stop tokens=3 0.4s loop=0.0 content=5ch think=5ch tail='Paris'
+medium answer: finish=stop tokens=140 3.6s loop=0.0 content=676ch think=44ch tail='vely expect, since it doesn\'t "create cold" but rather relocates heat.'
+max_tokens=1: finish=length tokens=1 0.1s loop=0.0 content=0ch think=1ch tail=''
+--- drop
+dropped after 0.05s (479 bytes seen); next request: stop in 0.6s
+dropped after 0.5s (8326 bytes seen); next request: stop in 0.2s
+dropped after 3.0s (29731 bytes seen); next request: stop in 0.2s
+--- title
+title beside dropped stream: finish=stop tokens=15 1.2s loop=0.0 content=38ch think=28ch tail='**Melting Giants: Glacier Chronicles**'
+request after: finish=stop tokens=2 0.2s loop=0.0 content=2ch think=0ch tail='ok'
+--- dropmany
+survivor 1: finish=stop tokens=221 9.8s loop=0.0 content=1014ch think=36ch tail='ice can start a movement.\n\nSmall in value, one is enormous in meaning.'
+survivor 3: finish=stop tokens=216 9.4s loop=0.0 content=984ch think=36ch tail='memorable, complete, and persuasive. Three, quite simply, feels right.'
+after drops, 4 at once #0: finish=stop tokens=226 13.0s loop=0.0 content=1097ch think=69ch tail='he digital world. Zero proves that sometimes nothing means everything.'
+after drops, 4 at once #1: finish=stop tokens=221 13.1s loop=0.0 content=1014ch think=36ch tail='ice can start a movement.\n\nSmall in value, one is enormous in meaning.'
+after drops, 4 at once #2: finish=stop tokens=219 12.6s loop=0.0 content=917ch think=76ch tail='every story. Small in value, the number 2 is enormous in significance.'
+after drops, 4 at once #3: finish=stop tokens=216 12.8s loop=0.0 content=984ch think=36ch tail='memorable, complete, and persuasive. Three, quite simply, feels right.'
+--- sampled
+temp 0.8 seed 1: finish=stop tokens=440 13.4s loop=0.0 content=1935ch think=88ch tail='he old lamp, and sits awhile with the sea—keeping watch, just in case.'
+temp 0.8 seed 2: finish=stop tokens=400 11.0s loop=0.0 content=1679ch think=89ch tail='go out."\n\nHe climbed the stairs once more that night, just to be sure.'
+--- tool
+tool call: finish=tool_calls tokens=11 0.8s loop=0.0 content=0ch think=0ch tail=''
+  tool_calls: [{"id": "call_1791666605821_0", "type": "function", "function": {"name": "get_weather", "arguments": "{\"city\":\"Paris\"}"}}]
+--- longprompt
+~25K prompt: finish=stop tokens=15 23.2s loop=0.0 content=3ch think=39ch tail='222'
+same prompt again: finish=stop tokens=16 3.3s loop=0.0 content=3ch think=36ch tail='539'
+small after long: finish=stop tokens=2 0.3s loop=0.0 content=2ch think=0ch tail='ok'
+--- done
