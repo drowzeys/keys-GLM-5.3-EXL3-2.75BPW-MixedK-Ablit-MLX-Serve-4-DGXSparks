@@ -32,7 +32,8 @@ Speeds vary by about 9 % from one load to the next on this cluster.
 
 ## Checks the image passed
 
-Run with `HOST=<rank 0> python3 bench/checks.py`; logs in `evidence/2026-10-10/`.
+Run with `HOST=<rank 0> python3 bench/checks.py`; logs in `evidence/2026-10-10/`. The last three rows ran on the same
+binaries just before they were packaged (`long-replies.log`); the rest ran on the image.
 
 | Check | Result |
 |---|---|
