@@ -21,7 +21,7 @@ result, and stop and report to your user when a check fails.
    (`MODEL`).
 2. Weights (once, about 250 GB): `hf download drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated --local-dir $MODEL`
    (gated; approval is automatic after the form).
-3. Image, on every node: `docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10`.
+3. Image, on every node: `docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-10`.
 4. Node settings, on every node after every reboot: `sudo node/gb10-node-settings.sh`.
 5. `NODES="..." MODEL=... ./one-shot.sh check` must end with `check: OK`.
 6. `./one-shot.sh up` (about 6 minutes). It prints `SERVING` with the address, or the failing rank's log lines.
