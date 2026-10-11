@@ -145,9 +145,10 @@ Per request: `reasoning_effort` (`low`, `high`, `max`) chooses how long the mode
   rank.
 - `PRESET=1m` serves one request at a time; a second request waits. After a client disconnected mid-reply, the next
   request waited about 40 s. Prompts are read about 2.5 times slower than in the default shape.
-- `PRESET=1m` answered one early-context lookup wrong: asked for entry 77 of a 1,400-entry list (25K tokens) it
-  returned 532 where the list says 539. A late entry was right, and the default shape gets both right. The cause is
-  not known; check answers that depend on exact details far back in a long prompt.
+- Exact lookups in a long prompt are less reliable at the default High effort, in every shape. On a 1,400-entry list
+  (23K tokens), 82 lookups: High got 73 right at 1M and 76 at 64K, usually returning a neighbouring entry; Max
+  (`"reasoning_effort": "max"`) got 81 in both. Use Max when an answer depends on one exact line far back in the
+  prompt (`evidence/2026-10-10/lookup-by-effort.log`). Changing the effort re-reads the whole prompt.
 - The presets were measured with the DSpark drafter only.
 - `DRAFTER=dflash` and `DRAFTER=mtp` ran on this engine before it was packaged, not from this image.
   [incoai/GLM-5.3-DFlash2](https://huggingface.co/incoai/GLM-5.3-DFlash2) is CC BY-NC-ND 4.0: you download it yourself.

@@ -1,0 +1,19 @@
+Lookup accuracy by reasoning effort, 2026-10-10. Prompt: 1,400 entries (23K tokens), 'How many crates does entry N hold?', 82 entries, greedy.
+Probe: Entry i: the warehouse in sector i%37 holds i*7%911 crates.
+
+== PRESET=1m (image 2026-10-10-wide) ==
+effort=max entry 125: got '882' want 875 WRONG 8.1s out=37 think='The user asks: entry 125. Looking at the list: Entry 125: the warehouse in sector 15 holds 882 crates.\n\nAnswer: 882'
+effort=max: 81/82 right
+effort=high entry 77: got '532' want 539 WRONG 59.9s out=16 think='Entry 77: sector 2 holds 532 crates.'
+effort=high entry 77: got '532' want 539 WRONG 0.4s out=16 think='Entry 77: sector 2 holds 532 crates.'
+effort=high entry 812: got '421' want 218 WRONG 7.5s out=17 think='Entry 812: sector 28 holds 421 crates.'
+effort=high entry 917: got '35' want 42 WRONG 7.5s out=15 think='Entry 917: sector 28 holds 35 crates.'
+effort=high entry 125: got '882' want 875 WRONG 7.7s out=16 think='Entry 125: sector 15 holds 882 crates.'
+effort=high entry 195: got '489' want 454 WRONG 7.7s out=16 think='Entry 195: sector 15 holds 489 crates.'
+effort=high entry 545: got '164' want 171 WRONG 7.5s out=15 think='Entry 545: sector 26 holds 164 crates.'
+effort=high entry 825: got '442' want 309 WRONG 7.6s out=17 think='Entry 825: sector 30 holds 442 crates.'
+effort=high entry 860: got '561' want 554 WRONG 7.9s out=17 think='Entry 860: sector 10 holds 561 crates.'
+effort=high: 73/82 right
+
+== PRESET=64k (image 2026-10-10-wide) ==
+(from the session: effort=max 81/82 right, miss entry 125; effort=high 76/82 right, misses 812 847 917 545 825 895)
