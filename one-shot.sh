@@ -5,7 +5,7 @@
 # Settings (environment, or `source cluster.env` first):
 #   NODES    the four Sparks' fabric addresses, rank 0 first (required)
 #   MODEL    the checkpoint directory, the same path on all four (required)
-#   IMAGE    [ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10-wide]
+#   IMAGE    [ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10-r4]
 #   DRAFTER  dspark (the DSpark ft2 drafter in the image, default) | mtp (GLM-5.3's own MTP layer) |
 #            dflash (DRAFT=<a DFlash2 directory on all four>; CC BY-NC-ND, you download it yourself)
 #   PRESET   unset: 32,768 tokens x 4 streams | 64k: 65,536 x 2 | 1m: 1,000,000 x 1 (one request at a time)
@@ -16,7 +16,7 @@ set -u
 read -r -a NODES <<<"${NODES:-}"
 [ ${#NODES[@]} = 4 ] || { echo "NODES must list four fabric addresses, rank 0 first"; exit 2; }
 MODEL=${MODEL:-}; DRAFT=${DRAFT:-}; DRAFTER=${DRAFTER:-dspark}
-IMAGE=${IMAGE:-ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10-wide}
+IMAGE=${IMAGE:-ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10-r4}
 PRESET=${PRESET:-}
 case "$PRESET" in "") c=32768 p=4 ;; 64k) c=65536 p=2 ;; 1m) c=1000000 p=1 ;; *) echo "PRESET=$PRESET (64k or 1m)"; exit 2 ;; esac
 CONTEXT=${CONTEXT:-$c}; PARALLEL=${PARALLEL:-$p}; PORT=${PORT:-18992}; RAILS=${RAILS:-2}; MEM=${MEM:-110g}; RDV=${RDV:-29882}

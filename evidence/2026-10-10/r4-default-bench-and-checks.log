@@ -1,0 +1,57 @@
+== image 2026-10-10-r3 + mlx-serve a2072091 mounted (the binary of 2026-10-10-r4), default 32K x 4 ==
+22:24:46 started: rank 0 on 10.100.10.1:18992, ranks 1..3 following; model /mnt/spark2-models-local/GLM-5.3-EXL3-2.75-mixedK-EXL3NE-ablit, drafter dspark , context 32768, parallel 4
+22:30:38 SERVING after 352 s: http://10.100.10.1:18992/v1 (model name: model)
+22:30:38 rank 0: 10 GB available
+22:30:38 rank 1: 10 GB available
+22:30:39 rank 2: 9 GB available
+22:30:39 rank 3: 10 GB available
+prose: 38.3 tok/s (runs 38.2, 38.3; 512 tokens; text 02f2a26e)
+code: 56.3 tok/s (runs 56.3, 56.1; 512 tokens; text 7cb95e5c)
+== checks ==
+--- stop
+short answer: finish=stop tokens=3 0.4s loop=0.0 content=5ch think=5ch tail='Paris'
+medium answer: finish=stop tokens=140 3.6s loop=0.0 content=676ch think=44ch tail='vely expect, since it doesn\'t "create cold" but rather relocates heat.'
+max_tokens=1: finish=length tokens=1 0.1s loop=0.0 content=0ch think=1ch tail=''
+--- long
+essay 6000: finish=length tokens=6000 141.6s loop=0.003 content=18355ch think=3031ch tail=' are allowed to be "stale" — they merely guide searches). PostgreSQL\'s'
+--- think
+thinking on: finish=stop tokens=187 4.5s loop=0.0 content=586ch think=63ch tail='lly, "all but 9" means "everyone except those 9" — so 9 is the answer.'
+thinking code: finish=stop tokens=1083 20.4s loop=0.002 content=4143ch think=109ch tail='tating the input, and validates that `start <= end` for each interval.'
+--- sampled
+temp 0.8 seed 1: finish=stop tokens=440 13.4s loop=0.0 content=1935ch think=88ch tail='he old lamp, and sits awhile with the sea—keeping watch, just in case.'
+temp 0.8 seed 2: finish=stop tokens=400 11.0s loop=0.0 content=1679ch think=89ch tail='go out."\n\nHe climbed the stairs once more that night, just to be sure.'
+--- drop
+dropped after 0.05s (479 bytes seen); next request: stop in 0.5s
+dropped after 0.5s (8326 bytes seen); next request: stop in 0.2s
+dropped after 3.0s (30183 bytes seen); next request: stop in 0.2s
+--- dropmany
+survivor 1: finish=stop tokens=221 9.9s loop=0.0 content=1014ch think=36ch tail='ice can start a movement.\n\nSmall in value, one is enormous in meaning.'
+survivor 3: finish=stop tokens=216 9.4s loop=0.0 content=984ch think=36ch tail='memorable, complete, and persuasive. Three, quite simply, feels right.'
+after drops, 4 at once #0: finish=stop tokens=226 13.0s loop=0.0 content=1097ch think=69ch tail='he digital world. Zero proves that sometimes nothing means everything.'
+after drops, 4 at once #1: finish=stop tokens=221 13.2s loop=0.0 content=1014ch think=36ch tail='ice can start a movement.\n\nSmall in value, one is enormous in meaning.'
+after drops, 4 at once #2: finish=stop tokens=219 12.6s loop=0.0 content=917ch think=76ch tail='every story. Small in value, the number 2 is enormous in significance.'
+after drops, 4 at once #3: finish=stop tokens=216 12.6s loop=0.0 content=984ch think=36ch tail='memorable, complete, and persuasive. Three, quite simply, feels right.'
+--- title
+title beside dropped stream: finish=stop tokens=15 1.1s loop=0.0 content=38ch think=28ch tail='**Melting Giants: Glacier Chronicles**'
+request after: finish=stop tokens=2 0.3s loop=0.0 content=2ch think=0ch tail='ok'
+--- over
+7 at once (4 lanes) #0: finish=stop tokens=270 16.1s loop=0.0 content=740ch think=485ch tail='re creation, the silence from which every colour will eventually sing.'
+7 at once (4 lanes) #1: finish=length tokens=300 18.7s loop=0.0 content=669ch think=676ch tail='ruth is that 1 has no colour at all, because colour requires plurality'
+7 at once (4 lanes) #2: finish=stop tokens=290 32.5s loop=0.0 content=771ch think=502ch tail="en abstract symbols can't escape our hunger to make the world visible."
+7 at once (4 lanes) #3: finish=stop tokens=283 17.0s loop=0.0 content=812ch think=484ch tail='en choose something golden—optimistic, complete, and quietly luminous.'
+7 at once (4 lanes) #4: finish=length tokens=300 18.1s loop=0.0 content=726ch think=584ch tail='be a deep teal or burnt ochre.\n\nFour, then, is never truly colourless:'
+7 at once (4 lanes) #5: finish=stop tokens=292 31.6s loop=0.0 content=842ch think=494ch tail='erceiving it—and that, perhaps, is the most fascinating colour of all.'
+7 at once (4 lanes) #6: finish=length tokens=300 32.0s loop=0.0 content=748ch think=626ch tail='ers could be painted, six would surely be midnight blue—quiet, rounded'
+--- tool
+tool call: finish=tool_calls tokens=11 0.8s loop=0.0 content=0ch think=0ch tail=''
+  tool_calls: [{"id": "call_1791686143201_0", "type": "function", "function": {"name": "get_weather", "arguments": "{\"city\":\"Paris\"}"}}]
+--- longprompt
+~25K prompt: finish=stop tokens=15 23.2s loop=0.0 content=3ch think=39ch tail='222'
+same prompt again: finish=stop tokens=16 3.3s loop=0.0 content=3ch think=36ch tail='539'
+small after long: finish=stop tokens=2 0.2s loop=0.0 content=2ch think=0ch tail='ok'
+--- done
+== memory ==
+rank 0 10.100.10.1: keys-glm53-r0 Up 11 minutes 10 GB available
+rank 1 10.100.10.2: keys-glm53-r1 Up 11 minutes 10 GB available
+rank 2 10.100.10.3: keys-glm53-r2 Up 11 minutes 9 GB available
+rank 3 10.100.10.5: keys-glm53-r3 Up 11 minutes 10 GB available
