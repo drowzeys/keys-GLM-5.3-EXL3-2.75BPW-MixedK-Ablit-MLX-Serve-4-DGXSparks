@@ -5,17 +5,21 @@
 # Settings (environment, or `source cluster.env` first):
 #   NODES    the four Sparks' fabric addresses, rank 0 first (required)
 #   MODEL    the checkpoint directory, the same path on all four (required)
-#   IMAGE    [ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10]
+#   IMAGE    [ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10-wide]
 #   DRAFTER  dspark (the DSpark ft2 drafter in the image, default) | mtp (GLM-5.3's own MTP layer) |
 #            dflash (DRAFT=<a DFlash2 directory on all four>; CC BY-NC-ND, you download it yourself)
-#   CONTEXT [32768]  PARALLEL [4]  PORT [18992]  RAILS [2]  MEM [110g]  RDV [29882] (rank rendezvous port)
+#   PRESET   unset: 32,768 tokens x 4 streams | 64k: 65,536 x 2 | 1m: 1,000,000 x 1 (one request at a time)
+#   CONTEXT  PARALLEL  (default to the preset's; another shape needs its own kernel pack)
+#   PORT [18992]  RAILS [2]  MEM [110g]  RDV [29882] (rank rendezvous port)
 #   DOCKER_ARGS  extra `docker run` arguments for every rank (e.g. -v a kernel pack for another context)
 set -u
 read -r -a NODES <<<"${NODES:-}"
 [ ${#NODES[@]} = 4 ] || { echo "NODES must list four fabric addresses, rank 0 first"; exit 2; }
 MODEL=${MODEL:-}; DRAFT=${DRAFT:-}; DRAFTER=${DRAFTER:-dspark}
-IMAGE=${IMAGE:-ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10}
-CONTEXT=${CONTEXT:-32768}; PARALLEL=${PARALLEL:-4}; PORT=${PORT:-18992}; RAILS=${RAILS:-2}; MEM=${MEM:-110g}; RDV=${RDV:-29882}
+IMAGE=${IMAGE:-ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10-wide}
+PRESET=${PRESET:-}
+case "$PRESET" in "") c=32768 p=4 ;; 64k) c=65536 p=2 ;; 1m) c=1000000 p=1 ;; *) echo "PRESET=$PRESET (64k or 1m)"; exit 2 ;; esac
+CONTEXT=${CONTEXT:-$c}; PARALLEL=${PARALLEL:-$p}; PORT=${PORT:-18992}; RAILS=${RAILS:-2}; MEM=${MEM:-110g}; RDV=${RDV:-29882}
 HERE=$(cd "$(dirname "$0")" && pwd); RUN=${RUN:-$HERE/run}
 rsh() { ssh -o ConnectTimeout=10 -o BatchMode=yes "$@"; }
 say() { echo "$(date +%H:%M:%S) $*" | tee -a $RUN/events.log; }
@@ -53,7 +57,7 @@ case "${1:-}" in
   check) check; exit $? ;;
   bench) exec python3 $HERE/bench/bench.py http://${NODES[0]}:$PORT ;;
   up) ;;
-  *) sed -n 2,12p "$0"; exit 2 ;;
+  *) sed -n 2,14p "$0"; exit 2 ;;
 esac
 [ -n "$MODEL" ] || { echo "MODEL is not set"; exit 2; }
 rm -rf $RUN; mkdir -p $RUN; down
@@ -86,7 +90,7 @@ for r in 0 1 2 3; do
   say "rank $r (${NODES[$r]}): ${IFN[$r]}, rails ${HCAS[$r]} GIDs ${RGIDS[$r]}; one-shot on ${ZHCAS[$r]} (GID ${ZGID[$r]})"
 done
 rank_env() {
-  local r=$1 e="-e RANK=$1 -e MASTER=${NODES[0]}:$RDV -e CONTEXT=$CONTEXT -e PARALLEL=$PARALLEL -e PORT=$PORT -e DRAFTER=$DRAFTER \
+  local r=$1 e="-e RANK=$1 -e MASTER=${NODES[0]}:$RDV -e CONTEXT=$CONTEXT -e PARALLEL=$PARALLEL -e PORT=$PORT -e DRAFTER=$DRAFTER -e PRESET=$PRESET \
     -e NCCL_SOCKET_IFNAME=${IFN[$1]} -e NCCL_IB_HCA=${HCAS[$1]} -e TF_GLM53_ROCE_HCA=${HCAS[$1]} -e TF_GLM53_ROCE_GIDS=${RGIDS[$1]} \
     -e TF_GLM53_HCAS=${ZHCAS[$1]} -e TF_GLM53_GID=${ZGID[$1]} -v $MODEL:/model:ro"
   [ $DRAFTER = dflash ] && e="$e -e DRAFT=$DRAFT -v $DRAFT:$DRAFT:ro"

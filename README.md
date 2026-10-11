@@ -8,11 +8,11 @@ engine does the forward pass, drafting and sampling on all four. One prebuilt im
 
 | | |
 |---|---|
-| Image | `ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10` (= `latest`) |
+| Image | `ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10-wide` (= `latest`) |
 | Weights | [drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated](https://huggingface.co/drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated) (gated, automatic approval) |
 | Drafter (in the image) | [drowzeys/keys-GLM-5.3-speculator.dspark-ft2](https://huggingface.co/drowzeys/keys-GLM-5.3-speculator.dspark-ft2), GLM-5.3 License |
 | Endpoint | `http://<rank 0>:18992/v1`, OpenAI- and Anthropic-compatible, model name `model`, no authentication |
-| Measured configuration | 32K context, 4 streams |
+| Measured configurations | 32K context × 4 streams (default), 64K × 2 (`PRESET=64k`), 1M × 1 (`PRESET=1m`) |
 
 ## Performance
 
@@ -29,6 +29,26 @@ every number is with thinking on (the server's default, High effort).
 | Memory left on each node while serving | 9-10 GB |
 
 Speeds vary by about 9 % from one load to the next on this cluster.
+
+### Other context sizes
+
+`PRESET=64k ./one-shot.sh up` and `PRESET=1m ./one-shot.sh up` use a second kernel pack in the image.
+
+| | Default | `PRESET=64k` | `PRESET=1m` |
+|---|---|---|---|
+| Context × streams | 32,768 × 4 | 65,536 × 2 | 1,000,000 × 1 |
+| Prose, one stream | 38.1 tok/s | 36.8 tok/s | 35.2 tok/s |
+| Code, one stream | 56.2 tok/s | 57.2 tok/s | 44.8 tok/s |
+| 25K-token prompt, first time | 23.2 s | not measured | 61.9 s |
+| The same prompt with a changed last line | 3.3 s | not measured | 7.8 s |
+| Memory left on each node | 9-10 GB | 12-14 GB | 8-10 GB |
+| Load time | 350 s | 318 s | 317 s |
+
+- **`PRESET=1m`** splits the cache across the four Sparks (decode context parallel), which is what makes 1M fit. It
+  turns off the dense copy of the MTP layer (`TF_GLM53_MTP_DENSE=0`, 5 GB a Spark) and caps the kept prompt prefixes at
+  4 GB (`TF_GLM53_CACHE_GIB=4`). Measured from this image: `evidence/2026-10-10/preset-1m-*.log`.
+- **`PRESET=64k`** was measured on the previous image tag with this kernel pack mounted from disk, not started from
+  this tag.
 
 ## Checks the image passed
 
@@ -57,7 +77,7 @@ export NODES="10.0.0.1 10.0.0.2 10.0.0.3 10.0.0.4"      # fabric addresses, rank
 export MODEL=/models/keys-GLM-5.3-EXL3-2.75BPW-Abliterated  # the same path on all four
 
 hf download drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated --local-dir $MODEL    # once, ~250 GB, on every node or a share
-for n in $NODES; do ssh $n docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10; done
+for n in $NODES; do ssh $n docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-tf-engine-4-dgxsparks:2026-10-10-wide; done
 for n in $NODES; do scp node/gb10-node-settings.sh $n:/tmp/ && ssh -t $n sudo /tmp/gb10-node-settings.sh; done   # after every reboot
 
 ./one-shot.sh check     # must end with "check: OK"
@@ -91,6 +111,7 @@ Everything is under `/opt/keys-glm53`; the entry point is `/opt/keys-glm53/serve
 | mlx-serve | `main` of 2026-10 with a bridge that loads the engine as a library | HTTP server on rank 0: chat template, tool calls, streaming |
 | DSpark ft2 drafter | `draft/dspark-ft2` | Speculative drafts (confidence policy, 0.3) |
 | Kernel packs and tile tables | `aot/`, `ref/` | Precompiled decode kernels for 32K context and 4 streams |
+| Wide kernel pack | `aot-wide/`, `ref-wide/` | Kernels for the `64k` and `1m` presets (built with TensorFold 1.0.4's generator) |
 | Licenses | `licenses/` | TensorFold, mlx-serve and their third-party notices |
 
 ## What this build changes
@@ -109,7 +130,8 @@ Everything is under `/opt/keys-glm53`; the entry point is `/opt/keys-glm53/serve
 | `NODES` | required | Four fabric addresses, rank 0 first |
 | `MODEL` | required | Checkpoint directory, the same path on all four |
 | `DRAFTER` | `dspark` | `dspark`: the drafter in the image. `mtp`: GLM-5.3's own MTP layer, no extra model. `dflash`: a DFlash2 directory you supply with `DRAFT=` |
-| `CONTEXT` / `PARALLEL` | `32768` / `4` | Context window and concurrent streams |
+| `PRESET` | unset | `64k`: 65,536 tokens × 2 streams. `1m`: 1,000,000 tokens × 1 stream |
+| `CONTEXT` / `PARALLEL` | the preset's (`32768` / `4`) | Context window and concurrent streams |
 | `PORT` | `18992` | HTTP port on rank 0 |
 | `RAILS` | `2` | RoCE rails to use; `1` if the second rail is not addressed alike on all four |
 | `TF_GLM53_*` | the image's | Any engine setting you export reaches every rank |
@@ -118,8 +140,15 @@ Per request: `reasoning_effort` (`low`, `high`, `max`) chooses how long the mode
 
 ## Limits
 
-- Only 32K context with 4 streams was measured. The kernel pack in the image was built for that configuration; another
-  context or stream count may need kernels the image does not hold, and each stream holds its own cache on every rank.
+- Three shapes were measured: 32K × 4, 64K × 2 and 1M × 1. Another context or stream count may need kernels the image
+  does not hold. More than one stream is limited to 200,000 tokens each, and each stream holds its own cache on every
+  rank.
+- `PRESET=1m` serves one request at a time; a second request waits. After a client disconnected mid-reply, the next
+  request waited about 40 s. Prompts are read about 2.5 times slower than in the default shape.
+- `PRESET=1m` answered one early-context lookup wrong: asked for entry 77 of a 1,400-entry list (25K tokens) it
+  returned 532 where the list says 539. A late entry was right, and the default shape gets both right. The cause is
+  not known; check answers that depend on exact details far back in a long prompt.
+- The presets were measured with the DSpark drafter only.
 - `DRAFTER=dflash` and `DRAFTER=mtp` ran on this engine before it was packaged, not from this image.
   [incoai/GLM-5.3-DFlash2](https://huggingface.co/incoai/GLM-5.3-DFlash2) is CC BY-NC-ND 4.0: you download it yourself.
 - Prompt reuse keeps the last shared point only. A prompt that shares less than 4,096 tokens with the one before it is

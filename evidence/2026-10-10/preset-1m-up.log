@@ -1,0 +1,11 @@
+19:43:44 rank 0 (10.100.10.1): enp1s0f1np1, rails rocep1s0f1,roceP2p1s0f1 GIDs 3,3; one-shot on rocep1s0f1,roceP2p1s0f1 (GID 3)
+19:43:45 rank 1 (10.100.10.2): enp1s0f1np1, rails rocep1s0f1,roceP2p1s0f1 GIDs 3,3; one-shot on rocep1s0f1,roceP2p1s0f1 (GID 3)
+19:43:45 rank 2 (10.100.10.3): enp1s0f1np1, rails rocep1s0f1,roceP2p1s0f1 GIDs 3,3; one-shot on rocep1s0f1,roceP2p1s0f1 (GID 3)
+19:43:45 rank 3 (10.100.10.5): enp1s0f1np1, rails rocep1s0f1,roceP2p1s0f1 GIDs 3,3; one-shot on rocep1s0f1,roceP2p1s0f1 (GID 3)
+19:43:50 started: rank 0 on 10.100.10.1:18992, ranks 1..3 following; model /mnt/spark2-models-local/GLM-5.3-EXL3-2.75-mixedK-EXL3NE-ablit, drafter dspark , context 1000000, parallel 1
+19:49:07 SERVING after 317 s: http://10.100.10.1:18992/v1 (model name: model)
+19:49:08 rank 0: 10 GB available
+19:49:08 rank 1: 10 GB available
+19:49:09 rank 2: 9 GB available
+19:49:09 rank 3: 10 GB available
+19:49:09 the memory watchdog keeps running in the background; './one-shot.sh down' stops it and the ranks

@@ -1,0 +1,51 @@
+== image 2026-10-10-wide, PRESET=1m ==
+prose: 35.2 tok/s (runs 35.2, 35.0; 512 tokens; text 835d4336)
+code: 44.8 tok/s (runs 44.4, 44.8; 512 tokens; text 75d3febe)
+== checks ==
+--- stop
+short answer: finish=stop tokens=3 0.4s loop=0.0 content=5ch think=5ch tail='Paris'
+medium answer: finish=stop tokens=120 3.8s loop=0.0 content=564ch think=54ch tail='why the back of a refrigerator feels warm while the inside stays cold.'
+max_tokens=1: finish=length tokens=1 0.2s loop=0.0 content=0ch think=1ch tail=''
+--- long
+essay 6000: finish=stop tokens=5599 152.6s loop=0.002 content=18156ch think=2268ch tail='rable workhorse of on-disk indexing fifty years after their invention.'
+--- think
+thinking on: finish=stop tokens=161 4.7s loop=0.0 content=544ch think=52ch tail='le of how careful reading (or listening) matters more than quick math.'
+thinking code: finish=stop tokens=1084 23.0s loop=0.002 content=4125ch think=109ch tail='(`start > end`) raise `ValueError` rather than being silently "fixed."'
+--- sampled
+temp 0.8 seed 1: finish=stop tokens=423 14.2s loop=0.0 content=1840ch think=88ch tail='ped its flag, all of them, every single one, for as long as she lived.'
+temp 0.8 seed 2: finish=stop tokens=426 13.6s loop=0.0 content=1805ch think=89ch tail=' sea.\n\n"Someone\'s always needed," he said. "Even if only to remember."'
+--- drop
+dropped after 0.05s (479 bytes seen); next request: stop in 40.8s
+dropped after 0.5s (4522 bytes seen); next request: stop in 40.1s
+dropped after 3.0s (26756 bytes seen); next request: stop in 37.5s
+--- dropmany
+survivor 1: finish=stop tokens=215 6.8s loop=0.0 content=996ch think=36ch tail='ber 1 is where everything starts—and sometimes, where everything ends.'
+survivor 3: finish=stop tokens=221 65.8s loop=0.0 content=1020ch think=36ch tail='e—the minimum needed for complexity, stability, and meaning to emerge.'
+after drops, 4 at once #0: finish=stop tokens=214 21.0s loop=0.0 content=1112ch think=76ch tail='ial simultaneously: the paradox of nothing that makes everything work.'
+after drops, 4 at once #1: finish=stop tokens=215 6.6s loop=0.0 content=996ch think=36ch tail='ber 1 is where everything starts—and sometimes, where everything ends.'
+after drops, 4 at once #2: finish=stop tokens=218 27.6s loop=0.0 content=989ch think=36ch tail='hip, making 2 fundamentally the number of relationship and connection.'
+after drops, 4 at once #3: finish=stop tokens=221 13.7s loop=0.0 content=1020ch think=36ch tail='e—the minimum needed for complexity, stability, and meaning to emerge.'
+--- title
+title beside dropped stream: finish=stop tokens=15 0.8s loop=0.0 content=31ch think=28ch tail='**Melting Giants: Ice Retreat**'
+request after: finish=stop tokens=2 40.6s loop=0.0 content=2ch think=0ch tail='ok'
+--- over
+7 at once (4 lanes) #0: finish=stop tokens=269 26.7s loop=0.0 content=736ch think=414ch tail='oid that gives all other hues their meaning, presence, and brilliance.'
+7 at once (4 lanes) #1: finish=length tokens=300 9.5s loop=0.0 content=797ch think=564ch tail='fuses the spectrum entirely, existing as pure form: a vertical stroke,'
+7 at once (4 lanes) #2: finish=length tokens=300 60.3s loop=0.0 content=637ch think=669ch tail=', partnership, moonlight and water, often rendered in silvery white or'
+7 at once (4 lanes) #3: finish=stop tokens=226 34.5s loop=0.0 content=832ch think=261ch tail='t seems to glow with significance, whatever shade your mind paints it.'
+7 at once (4 lanes) #4: finish=stop tokens=258 43.1s loop=0.0 content=756ch think=437ch tail="lue because someone's mind decided so—and for them, it always will be."
+7 at once (4 lanes) #5: finish=stop tokens=287 18.5s loop=0.0 content=798ch think=490ch tail=', our imaginations keep painting it anyway—stubbornly, vividly yellow.'
+7 at once (4 lanes) #6: finish=stop tokens=240 50.8s loop=0.0 content=829ch think=277ch tail='ous question: what does a number *look* like when you close your eyes?'
+--- tool
+tool call: finish=tool_calls tokens=11 1.0s loop=0.0 content=0ch think=0ch tail=''
+  tool_calls: [{"id": "call_1791676741984_0", "type": "function", "function": {"name": "get_weather", "arguments": "{\"city\":\"Paris\"}"}}]
+--- longprompt
+~25K prompt: finish=stop tokens=15 61.9s loop=0.0 content=3ch think=39ch tail='222'
+same prompt again: finish=stop tokens=16 7.8s loop=0.0 content=3ch think=36ch tail='532'
+small after long: finish=stop tokens=2 0.2s loop=0.0 content=2ch think=0ch tail='ok'
+--- done
+== memory ==
+rank 0 10.100.10.1: keys-glm53-r0 Up 16 minutes 9 GB available
+rank 1 10.100.10.2: keys-glm53-r1 Up 16 minutes 9 GB available
+rank 2 10.100.10.3: keys-glm53-r2 Up 16 minutes 8 GB available
+rank 3 10.100.10.5: keys-glm53-r3 Up 16 minutes 9 GB available
