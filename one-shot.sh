@@ -1,6 +1,6 @@
 #!/bin/bash
-# Full GLM-5.3 EXL3 2.75 bpw (abliterated) on four DGX Sparks: mlx-serve on rank 0 with TensorFold's GLM-5.3 CUDA
-# engine at tensor parallel 4, ranks 1..3 following. One container a Spark, started over ssh from any machine.
+# Full GLM-5.3 EXL3 2.75 bpw (abliterated) on four DGX Sparks: mlx-serve on rank 0 with the GLM-5.3 CUDA
+# inference engine at tensor parallel 4, ranks 1..3 following. One container a Spark, started over ssh from any machine.
 #   ./one-shot.sh check | up | down | status | bench
 # Settings (environment, or `source cluster.env` first):
 #   NODES    the four Sparks' fabric addresses, rank 0 first (required)

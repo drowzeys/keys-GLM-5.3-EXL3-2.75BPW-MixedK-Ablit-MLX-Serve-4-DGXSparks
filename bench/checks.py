@@ -67,7 +67,7 @@ for w in which:
         res = par([k(i) for i in range(4)])
         for i, r in enumerate(res): show(f"after drops, 4 at once #{i}", r)
     elif w == "title":
-        # the pattern that deadlocked the TensorFold Turns server: a reply streaming, a short title request beside it, then a disconnect
+        # the pattern that deadlocked the engine's Turns server: a reply streaming, a short title request beside it, then a disconnect
         res = par([lambda: drop("Write a 1000-word essay on glaciers.", 2.0), lambda: call("Give a 4-word title for a chat about glaciers.", 30, timeout=120)])
         show("title beside dropped stream", res[1])
         show("request after", call("Reply with the single word: ok", 50, timeout=120))

@@ -1,9 +1,9 @@
-# keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-TF-Engine-4-DGXSparks
+# keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-4-DGXSparks
 
-# Built on [TensorFold 1.0.5](https://github.com/ashhart/TensorFold) by Ash Hart and [mlx-serve](https://github.com/ddalcu/mlx-serve) by David Dalcu
+# Built on [mlx-serve](https://github.com/ddalcu/mlx-serve) by David Dalcu and a third-party inference engine (1.0.5, see [NOTICE.md](NOTICE.md))
 
 The full **GLM-5.3** (753B parameters, EXL3 2.75 bpw mixed-K, abliterated) served across **four NVIDIA DGX Sparks**
-(GB10, one rank a Spark over ConnectX-7 RoCE, tensor parallel 4). mlx-serve is the HTTP server on rank 0; TensorFold's
+(GB10, one rank a Spark over ConnectX-7 RoCE, tensor parallel 4). mlx-serve is the HTTP server on rank 0; the inference
 engine does the forward pass, drafting and sampling on all four. One prebuilt image, drafter included.
 
 | | |
@@ -72,7 +72,7 @@ binaries just before they were packaged (`long-replies.log`); the rest ran on th
 On a machine with passwordless ssh to the four Sparks:
 
 ```sh
-git clone https://github.com/drowzeys/keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-TF-Engine-4-DGXSparks && cd keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-TF-Engine-4-DGXSparks
+git clone https://github.com/drowzeys/keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-4-DGXSparks && cd keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-4-DGXSparks
 export NODES="10.0.0.1 10.0.0.2 10.0.0.3 10.0.0.4"      # fabric addresses, rank 0 first
 export MODEL=/models/keys-GLM-5.3-EXL3-2.75BPW-Abliterated  # the same path on all four
 
@@ -107,18 +107,18 @@ Everything is under `/opt/keys-glm53`; the entry point is `/opt/keys-glm53/serve
 
 | Part | Version | Role |
 |---|---|---|
-| TensorFold engine | 1.0.5 with our `glm_moe_dsa` CUDA tensor-parallel port | Forward pass, drafting, sampling, prompt reuse; one process a Spark |
+| Inference engine | 1.0.5 with our `glm_moe_dsa` CUDA tensor-parallel port | Forward pass, drafting, sampling, prompt reuse; one process a Spark |
 | mlx-serve | `main` of 2026-10 with a bridge that loads the engine as a library | HTTP server on rank 0: chat template, tool calls, streaming |
 | DSpark ft2 drafter | `draft/dspark-ft2` | Speculative drafts (confidence policy, 0.3) |
 | Kernel packs and tile tables | `aot/`, `ref/` | Precompiled decode kernels for 32K context and 4 streams |
-| Wide kernel pack | `aot-wide/`, `ref-wide/` | Kernels for the `64k` and `1m` presets (built with TensorFold 1.0.4's generator) |
-| Licenses | `licenses/` | TensorFold, mlx-serve and their third-party notices |
+| Wide kernel pack | `aot-wide/`, `ref-wide/` | Kernels for the `64k` and `1m` presets (built with engine 1.0.4's generator) |
+| Licenses | `licenses/` | The engine's and mlx-serve's licenses and their third-party notices |
 
 ## What this build changes
 
 | Change | Effect |
 |---|---|
-| Engine merged onto TensorFold 1.0.5 | Upstream's 1.0.5 kernels and fixes under the GLM-5.3 port |
+| Engine merged onto upstream engine 1.0.5 | Upstream's 1.0.5 kernels and fixes under the GLM-5.3 port |
 | Prompt reuse keeps a point every 4,096 tokens (`TF_GLM53_REUSE_STRIDE`) | A long prompt with a changed ending resumes from the last shared point: 23 s to 3.3 s on a 25K prompt |
 | A client that leaves cancels its reply at once (tag `2026-10-10-r4`) | With one stream a dropped reply used to run to its end and hold the next request (40 s for a 1,400-token reply); now 0.2 to 0.7 s |
 | Thinking defaults to High effort | GLM-5.3's template runs at Max effort when no effort is named, which spends thousands of tokens on reasoning. High keeps the reasoning short |
@@ -159,6 +159,4 @@ Per request: `reasoning_effort` (`low`, `high`, `max`) chooses how long the mode
 
 ## Related
 
-- [keys-TensorFold-GLM-5.3-TP4-4x-DGX-Spark](https://github.com/drowzeys/keys-TensorFold-GLM-5.3-TP4-4x-DGX-Spark):
-  the same weights on TensorFold's Python engine, up to 1M context.
 - Credits and licenses: [NOTICE.md](NOTICE.md).
