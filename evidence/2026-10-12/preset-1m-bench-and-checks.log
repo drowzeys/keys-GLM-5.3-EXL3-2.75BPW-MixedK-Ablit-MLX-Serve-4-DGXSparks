@@ -1,0 +1,87 @@
+# image ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12, booted as published, PRESET=1m
+2026-10-12 16:36:28 live-1m: up (live-champion.sh, image 2026-10-12)
+2026-10-12 16:41:55 live-1m: 16:41:53 SERVING after 318 s: http://10.100.10.1:18992/v1 (model name: model)
+2026-10-12 16:41:55 live-1m head: serve: 6-bit output head /model/lm_head-6bit/lm_head-6bit.safetensors
+live-1m container: ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12 sha256:89aad7cf1f07ad4e1d206b0a5489477b41c42dcbc3382f5b0645e6d6a44afe80 mounts /model 
+2026-10-12 16:42:46 live-1m bench: prose: 35.2 tok/s (runs 35.2, 35.0; 492 tokens; text 8b994038) code: 46.0 tok/s (runs 45.9, 46.0; 512 tokens; text 75d3febe)
+2026-10-12 16:43:38 live-1m bench again: prose: 34.8 tok/s (runs 34.8, 34.1; 492 tokens; text 8b994038) code: 45.7 tok/s (runs 45.5, 45.7; 512 tokens; text 75d3febe)
+2026-10-12 16:49:52 live-1m checks done (27 replies, 0 error lines)
+2026-10-12 16:54:39 live-1m needle 5000 lines: prompt 106360 tokens, 287.5 s, prefill 371 tok/s, decode 37.2 tok/s, FOUND answer='quartz-heron-4417'
+2026-10-12 16:54:43 live-1m memory: 9/9/9/9 GB; min in run: 9 GB
+2026-10-12 16:54:43 live: ready 1000000
+
+== up
+16:36:29 rank 0 (10.100.10.1): enp1s0f1np1, rails rocep1s0f1,roceP2p1s0f1 GIDs 3,3; one-shot on rocep1s0f1,roceP2p1s0f1 (GID 3)
+16:36:30 rank 1 (10.100.10.2): enp1s0f1np1, rails rocep1s0f1,roceP2p1s0f1 GIDs 3,3; one-shot on rocep1s0f1,roceP2p1s0f1 (GID 3)
+16:36:30 rank 2 (10.100.10.3): enp1s0f1np1, rails rocep1s0f1,roceP2p1s0f1 GIDs 3,3; one-shot on rocep1s0f1,roceP2p1s0f1 (GID 3)
+16:36:31 rank 3 (10.100.10.5): enp1s0f1np1, rails rocep1s0f1,roceP2p1s0f1 GIDs 3,3; one-shot on rocep1s0f1,roceP2p1s0f1 (GID 3)
+16:36:35 started: rank 0 on 10.100.10.1:18992, ranks 1..3 following; model /mnt/spark2-models-local/GLM-5.3-EXL3-2.75-mixedK-EXL3NE-ablit, drafter dspark , context 1000000, parallel 1
+16:41:53 SERVING after 318 s: http://10.100.10.1:18992/v1 (model name: model)
+16:41:54 rank 0: 10 GB available
+16:41:54 rank 1: 10 GB available
+16:41:54 rank 2: 10 GB available
+16:41:55 rank 3: 10 GB available
+16:41:55 the memory watchdog keeps running in the background; './one-shot.sh down' stops it and the ranks
+serve: 6-bit output head /model/lm_head-6bit/lm_head-6bit.safetensors
+ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12 sha256:89aad7cf1f07ad4e1d206b0a5489477b41c42dcbc3382f5b0645e6d6a44afe80 mounts /model 
+== bench
+prose: 35.2 tok/s (runs 35.2, 35.0; 492 tokens; text 8b994038)
+code: 46.0 tok/s (runs 45.9, 46.0; 512 tokens; text 75d3febe)
+== bench2
+prose: 34.8 tok/s (runs 34.8, 34.1; 492 tokens; text 8b994038)
+code: 45.7 tok/s (runs 45.5, 45.7; 512 tokens; text 75d3febe)
+== checks
+--- stop
+short answer: finish=stop tokens=3 0.4s loop=0.0 content=5ch think=5ch tail='Paris'
+medium answer: finish=stop tokens=120 3.8s loop=0.0 content=564ch think=54ch tail='why the back of a refrigerator feels warm while the inside stays cold.'
+max_tokens=1: finish=length tokens=1 0.2s loop=0.0 content=0ch think=1ch tail=''
+--- long
+essay 6000: finish=stop tokens=5154 138.7s loop=0.006 content=17521ch think=2480ch tail='ever enter a minimal child) is the key to implementing them correctly.'
+--- think
+thinking on: finish=stop tokens=161 4.5s loop=0.0 content=544ch think=52ch tail='le of how careful reading (or listening) matters more than quick math.'
+thinking code: finish=stop tokens=1094 22.9s loop=0.002 content=4168ch think=109ch tail='ng silently "fixed," since that usually indicates a bug in the caller.'
+--- sampled
+temp 0.8 seed 1: finish=stop tokens=416 14.0s loop=0.0 content=1862ch think=96ch tail=', the light flickers oddly—like someone watching, still keeping watch.'
+temp 0.8 seed 2: finish=stop tokens=422 13.7s loop=0.0 content=1818ch think=89ch tail='a keeper.\n\nThere is a difference, and eleven families know what it is.'
+--- drop
+dropped after 0.05s (479 bytes seen); next request: stop in 0.7s
+dropped after 0.5s (4522 bytes seen); next request: stop in 0.2s
+dropped after 3.0s (27450 bytes seen); next request: stop in 0.2s
+--- dropmany
+survivor 1: finish=stop tokens=215 6.6s loop=0.0 content=996ch think=36ch tail='ber 1 is where everything starts—and sometimes, where everything ends.'
+survivor 3: finish=stop tokens=221 14.0s loop=0.0 content=1020ch think=36ch tail='e—the minimum needed for complexity, stability, and meaning to emerge.'
+after drops, 4 at once #0: finish=stop tokens=214 19.6s loop=0.0 content=1112ch think=76ch tail='ial simultaneously: the paradox of nothing that makes everything work.'
+after drops, 4 at once #1: finish=stop tokens=215 6.8s loop=0.0 content=996ch think=36ch tail='ber 1 is where everything starts—and sometimes, where everything ends.'
+after drops, 4 at once #2: finish=stop tokens=199 12.6s loop=0.0 content=895ch think=36ch tail='mething new becomes possible: dialogue, comparison, and companionship.'
+after drops, 4 at once #3: finish=stop tokens=221 26.3s loop=0.0 content=1020ch think=36ch tail='e—the minimum needed for complexity, stability, and meaning to emerge.'
+--- title
+title beside dropped stream: finish=stop tokens=15 0.8s loop=0.0 content=31ch think=28ch tail='**Melting Giants: Ice Retreat**'
+request after: finish=stop tokens=2 0.3s loop=0.0 content=2ch think=0ch tail='ok'
+--- over
+7 at once (4 lanes) #0: finish=stop tokens=269 7.8s loop=0.0 content=727ch think=414ch tail='ives shape to what surrounds it, just as zero makes counting possible.'
+7 at once (4 lanes) #1: finish=length tokens=300 25.3s loop=0.0 content=797ch think=564ch tail='fuses the spectrum entirely, existing as pure form: a vertical stroke,'
+7 at once (4 lanes) #2: finish=length tokens=300 57.4s loop=0.0 content=637ch think=669ch tail=', partnership, moonlight and water, often rendered in silvery white or'
+7 at once (4 lanes) #3: finish=stop tokens=213 32.3s loop=0.0 content=792ch think=261ch tail=' frequency of human meaning, vibrating wherever things come in threes.'
+7 at once (4 lanes) #4: finish=stop tokens=258 16.1s loop=0.0 content=756ch think=437ch tail="lue because someone's mind decided so—and for them, it always will be."
+7 at once (4 lanes) #5: finish=stop tokens=287 41.0s loop=0.0 content=798ch think=490ch tail=', our imaginations keep painting it anyway—stubbornly, vividly yellow.'
+7 at once (4 lanes) #6: finish=stop tokens=241 48.3s loop=0.0 content=794ch think=277ch tail='ke a colour you could sink into—steady, dense, and quietly protective.'
+--- tool
+tool call: finish=tool_calls tokens=11 1.0s loop=0.0 content=0ch think=0ch tail=''
+  tool_calls: [{"id": "call_1791838122015_0", "type": "function", "function": {"name": "get_weather", "arguments": "{\"city\":\"Paris\"}"}}]
+--- longprompt
+~25K prompt: finish=stop tokens=15 62.2s loop=0.0 content=3ch think=39ch tail='222'
+same prompt again: finish=stop tokens=16 7.8s loop=0.0 content=3ch think=36ch tail='532'
+small after long: finish=stop tokens=2 0.1s loop=0.0 content=2ch think=0ch tail='ok'
+--- done
+== needle
+needle 5000 lines: prompt 106360 tokens, 287.5 s, prefill 371 tok/s, decode 37.2 tok/s, FOUND answer='quartz-heron-4417'
+== mem
+rank 0 10.100.10.1: keys-glm53-r0 Up 18 minutes 9 GB available
+rank 1 10.100.10.2: keys-glm53-r1 Up 18 minutes 9 GB available
+rank 2 10.100.10.3: keys-glm53-r2 Up 18 minutes 9 GB available
+rank 3 10.100.10.5: keys-glm53-r3 Up 18 minutes 9 GB available
+== the 2026-10-11 image, same day, PRESET=1m
+prose: 34.9 tok/s (runs 34.9, 34.6; 512 tokens; text 835d4336)
+code: 44.4 tok/s (runs 44.0, 44.4; 512 tokens; text 75d3febe)
+prose: 34.8 tok/s (runs 34.8, 34.6; 512 tokens; text 835d4336)
+code: 44.2 tok/s (runs 44.1, 44.2; 512 tokens; text 75d3febe)

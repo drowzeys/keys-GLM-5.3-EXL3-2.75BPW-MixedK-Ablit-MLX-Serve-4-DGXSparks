@@ -8,7 +8,7 @@ engine does the forward pass, drafting and sampling on all four. One prebuilt im
 
 | | |
 |---|---|
-| Image | `ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-11` (= `latest`) |
+| Image | `ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12` (= `latest`) |
 | Weights | [drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated](https://huggingface.co/drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated) (gated, automatic approval) |
 | Drafter (in the image) | [drowzeys/keys-GLM-5.3-speculator.dspark-ft2](https://huggingface.co/drowzeys/keys-GLM-5.3-speculator.dspark-ft2), GLM-5.3 License |
 | Endpoint | `http://<rank 0>:18992/v1`, OpenAI- and Anthropic-compatible, model name `model`, no authentication |
@@ -50,6 +50,37 @@ Speeds vary by about 9 % from one load to the next on this cluster.
 - **`PRESET=64k`** was measured on the previous image tag with this kernel pack mounted from disk, not started from
   this tag.
 
+## Image `2026-10-12`: a 6-bit output head and a lighter health check
+
+Built on [mlx-serve](https://github.com/ddalcu/mlx-serve) by David Dalcu, a third-party inference engine (see
+[NOTICE.md](NOTICE.md)), [exllamav3](https://github.com/turboderp-org/exllamav3) by turboderp (the EXL3 format and
+quantizer) and GLM-5.3 by [Z.ai](https://huggingface.co/zai-org).
+
+| Change | Effect |
+|---|---|
+| The output head is read as a 6-bit EXL3 linear when the checkpoint has one (`lm_head-6bit/lm_head-6bit.safetensors`, 714 MB, now in the weights repository) | A head launch takes 0.79 ms on a Spark against 2.16 ms for the bf16 head. Measured on the unmodified 2.75 bpw pack, whose output head is byte-identical to this checkpoint's: as-served KL against the BF16 checkpoint 0.175612 with the bf16 head, 0.175724 with this one, over 137,490 positions; top-1 agreement 89.64% and 89.60%. Some greedy replies differ |
+| The per-window health check no longer does its own all-gather (`TF_GLM53_ROCE_HEALTH_LOCAL=1`) | Replies identical to the previous build; about 1% faster |
+
+Measured from each image as published, same day, four DGX Sparks, thinking on, greedy, 512 tokens
+(`evidence/2026-10-12/`):
+
+| | `2026-10-11` | `2026-10-12` |
+|---|---|---|
+| Prose, `PRESET=1m`, these weights | 34.9 tok/s | 35.2 tok/s |
+| Code, `PRESET=1m`, these weights | 44.4 tok/s | **46.0 tok/s** |
+| 25K-token prompt, first time / changed last line, `PRESET=1m`, these weights | 62.0 s / 7.7 s (10-11) | 62.2 s / 7.8 s |
+| 106K-token prompt, passphrase at half depth, `PRESET=1m`, these weights | not run | found in 287 s; prefill 371 tok/s |
+| Prose / code, one stream, 32K × 4, unmodified pack | 37.5 / 55.8 tok/s | 39.6 / 57.8 tok/s |
+| Prose, all streams together: 1 / 2 / 4 at once, 32K × 4, unmodified pack | 36.8 / 51.6 / 66.6 tok/s | 38.6 / 53.6 / 68.5 tok/s |
+| Code, all streams together: 1 / 2 / 4 at once, 32K × 4, unmodified pack | 54.1 / 60.5 / 77.4 tok/s | 55.8 / 62.5 / 80.5 tok/s |
+
+- **Checks** (`bench/checks.py`): 27 replies and no errors in `PRESET=1m` on these weights.
+- **Not re-measured on this tag with these weights:** the default 32K × 4 and `64k` shapes. The 32K × 4 rows above ran
+  on the unmodified pack with the same engine build; the tables in Performance are from `2026-10-10-r4`.
+- **Turning the head off:** `HEAD_Q=off ./one-shot.sh up` serves with the bf16 head, as `2026-10-11` did. Without
+  the head file the image logs `no /model/lm_head-6bit/lm_head-6bit.safetensors: bf16 output head` and does the same.
+- **Limits:** the 6-bit head was measured with the DSpark drafter only.
+
 ## Checks the image passed
 
 Run with `HOST=<rank 0> python3 bench/checks.py`; logs in `evidence/2026-10-10/`. The last three rows ran on the same
@@ -77,7 +108,8 @@ export NODES="10.0.0.1 10.0.0.2 10.0.0.3 10.0.0.4"      # fabric addresses, rank
 export MODEL=/models/keys-GLM-5.3-EXL3-2.75BPW-Abliterated  # the same path on all four
 
 hf download drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated --local-dir $MODEL    # once, ~250 GB, on every node or a share
-for n in $NODES; do ssh $n docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-11; done
+# already have the checkpoint? fetch the 6-bit output head only (714 MB): add  --include "lm_head-6bit/*"
+for n in $NODES; do ssh $n docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12; done
 for n in $NODES; do scp node/gb10-node-settings.sh $n:/tmp/ && ssh -t $n sudo /tmp/gb10-node-settings.sh; done   # after every reboot
 
 ./one-shot.sh check     # must end with "check: OK"
@@ -121,6 +153,7 @@ Everything is under `/opt/keys-glm53`; the entry point is `/opt/keys-glm53/serve
 | Engine merged onto upstream engine 1.0.5 | Upstream's 1.0.5 kernels and fixes under the GLM-5.3 port |
 | Prompt reuse keeps a point every 4,096 tokens (`TF_GLM53_REUSE_STRIDE`) | A long prompt with a changed ending resumes from the last shared point: 23 s to 3.3 s on a 25K prompt |
 | Engine merged onto upstream engine 1.0.7 (tag `2026-10-11`) | Same replies as `2026-10-10-r4`: in the `1m` preset the prose and code benchmark texts are identical and the speed is the same (35.2 and 44.6 tok/s against 35.0 and 44.7). All checks pass (`evidence/2026-10-11/`). The default and `64k` shapes were not re-measured on this tag with these weights; the tables above are from `2026-10-10-r4` |
+| 6-bit output head and a lighter health check (tag `2026-10-12`) | See the section above: code 44.4 to 46.0 tok/s in `PRESET=1m`, KL +0.0001 |
 | A client that leaves cancels its reply at once (tag `2026-10-10-r4`) | With one stream a dropped reply used to run to its end and hold the next request (40 s for a 1,400-token reply); now 0.2 to 0.7 s |
 | Thinking defaults to High effort | GLM-5.3's template runs at Max effort when no effort is named, which spends thousands of tokens on reasoning. High keeps the reasoning short |
 | `enable_thinking: false` is served as Low effort | GLM-5.3's template has no thinking-off form; forcing one made the model rewrite its answer several times |
@@ -133,6 +166,7 @@ Everything is under `/opt/keys-glm53`; the entry point is `/opt/keys-glm53/serve
 | `MODEL` | required | Checkpoint directory, the same path on all four |
 | `DRAFTER` | `dspark` | `dspark`: the drafter in the image. `mtp`: GLM-5.3's own MTP layer, no extra model. `dflash`: a DFlash2 directory you supply with `DRAFT=` |
 | `PRESET` | unset | `64k`: 65,536 tokens × 2 streams. `1m`: 1,000,000 tokens × 1 stream |
+| `HEAD_Q` | unset | Unset: the 6-bit output head when `$MODEL/lm_head-6bit/lm_head-6bit.safetensors` exists, else the bf16 head. `off`: the bf16 head |
 | `CONTEXT` / `PARALLEL` | the preset's (`32768` / `4`) | Context window and concurrent streams |
 | `PORT` | `18992` | HTTP port on rank 0 |
 | `RAILS` | `2` | RoCE rails to use; `1` if the second rail is not addressed alike on all four |
