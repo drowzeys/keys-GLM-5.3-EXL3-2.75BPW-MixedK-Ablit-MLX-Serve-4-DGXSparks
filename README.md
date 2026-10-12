@@ -1,6 +1,6 @@
 # keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-4-DGXSparks
 
-# Built on [mlx-serve](https://github.com/ddalcu/mlx-serve) by David Dalcu and a third-party inference engine (1.0.5, see [NOTICE.md](NOTICE.md))
+# Built on [mlx-serve](https://github.com/ddalcu/mlx-serve) by David Dalcu and a third-party inference engine (1.0.7, see [NOTICE.md](NOTICE.md))
 
 The full **GLM-5.3** (753B parameters, EXL3 2.75 bpw mixed-K, abliterated) served across **four NVIDIA DGX Sparks**
 (GB10, one rank a Spark over ConnectX-7 RoCE, tensor parallel 4). mlx-serve is the HTTP server on rank 0; the inference
@@ -8,7 +8,7 @@ engine does the forward pass, drafting and sampling on all four. One prebuilt im
 
 | | |
 |---|---|
-| Image | `ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-10-r4` (= `latest`) |
+| Image | `ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-11` (= `latest`) |
 | Weights | [drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated](https://huggingface.co/drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated) (gated, automatic approval) |
 | Drafter (in the image) | [drowzeys/keys-GLM-5.3-speculator.dspark-ft2](https://huggingface.co/drowzeys/keys-GLM-5.3-speculator.dspark-ft2), GLM-5.3 License |
 | Endpoint | `http://<rank 0>:18992/v1`, OpenAI- and Anthropic-compatible, model name `model`, no authentication |
@@ -46,7 +46,7 @@ Speeds vary by about 9 % from one load to the next on this cluster.
 
 - **`PRESET=1m`** splits the cache across the four Sparks (decode context parallel), which is what makes 1M fit. It
   turns off the dense copy of the MTP layer (`TF_GLM53_MTP_DENSE=0`, 5 GB a Spark) and caps the kept prompt prefixes at
-  4 GB (`TF_GLM53_CACHE_GIB=4`). Measured from this image: `evidence/2026-10-10/r4-*.log`.
+  4 GB (`TF_GLM53_CACHE_GIB=4`). Measured from image `2026-10-10-r4`: `evidence/2026-10-10/r4-*.log`.
 - **`PRESET=64k`** was measured on the previous image tag with this kernel pack mounted from disk, not started from
   this tag.
 
@@ -77,7 +77,7 @@ export NODES="10.0.0.1 10.0.0.2 10.0.0.3 10.0.0.4"      # fabric addresses, rank
 export MODEL=/models/keys-GLM-5.3-EXL3-2.75BPW-Abliterated  # the same path on all four
 
 hf download drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated --local-dir $MODEL    # once, ~250 GB, on every node or a share
-for n in $NODES; do ssh $n docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-10-r4; done
+for n in $NODES; do ssh $n docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-11; done
 for n in $NODES; do scp node/gb10-node-settings.sh $n:/tmp/ && ssh -t $n sudo /tmp/gb10-node-settings.sh; done   # after every reboot
 
 ./one-shot.sh check     # must end with "check: OK"
@@ -107,7 +107,7 @@ Everything is under `/opt/keys-glm53`; the entry point is `/opt/keys-glm53/serve
 
 | Part | Version | Role |
 |---|---|---|
-| Inference engine | 1.0.5 with our `glm_moe_dsa` CUDA tensor-parallel port | Forward pass, drafting, sampling, prompt reuse; one process a Spark |
+| Inference engine | 1.0.7 with our `glm_moe_dsa` CUDA tensor-parallel port | Forward pass, drafting, sampling, prompt reuse; one process a Spark |
 | mlx-serve | `main` of 2026-10 with a bridge that loads the engine as a library | HTTP server on rank 0: chat template, tool calls, streaming |
 | DSpark ft2 drafter | `draft/dspark-ft2` | Speculative drafts (confidence policy, 0.3) |
 | Kernel packs and tile tables | `aot/`, `ref/` | Precompiled decode kernels for 32K context and 4 streams |
@@ -120,6 +120,7 @@ Everything is under `/opt/keys-glm53`; the entry point is `/opt/keys-glm53/serve
 |---|---|
 | Engine merged onto upstream engine 1.0.5 | Upstream's 1.0.5 kernels and fixes under the GLM-5.3 port |
 | Prompt reuse keeps a point every 4,096 tokens (`TF_GLM53_REUSE_STRIDE`) | A long prompt with a changed ending resumes from the last shared point: 23 s to 3.3 s on a 25K prompt |
+| Engine merged onto upstream engine 1.0.7 (tag `2026-10-11`) | Same replies as `2026-10-10-r4`: in the `1m` preset the prose and code benchmark texts are identical and the speed is the same (35.2 and 44.6 tok/s against 35.0 and 44.7). All checks pass (`evidence/2026-10-11/`). The default and `64k` shapes were not re-measured on this tag with these weights; the tables above are from `2026-10-10-r4` |
 | A client that leaves cancels its reply at once (tag `2026-10-10-r4`) | With one stream a dropped reply used to run to its end and hold the next request (40 s for a 1,400-token reply); now 0.2 to 0.7 s |
 | Thinking defaults to High effort | GLM-5.3's template runs at Max effort when no effort is named, which spends thousands of tokens on reasoning. High keeps the reasoning short |
 | `enable_thinking: false` is served as Low effort | GLM-5.3's template has no thinking-off form; forcing one made the model rewrite its answer several times |
