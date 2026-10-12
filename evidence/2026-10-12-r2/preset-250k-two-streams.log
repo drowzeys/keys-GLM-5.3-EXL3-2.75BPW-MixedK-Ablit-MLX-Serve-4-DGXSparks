@@ -1,0 +1,76 @@
+== live-250k cbench
+prose x 1: aggregate 35.0 tok/s (492 tokens in 14.0 s); per stream 35.0
+prose x 2: aggregate 46.4 tok/s (1004 tokens in 21.6 s); per stream 22.8, 24.0
+code x 1: aggregate 45.6 tok/s (512 tokens in 11.2 s); per stream 45.6
+code x 2: aggregate 53.0 tok/s (1024 tokens in 19.3 s); per stream 33.0, 26.6
+
+== live-250k compare
+8 of 8 replies identical
+
+== live-250k needle
+needle stream 0: prompt 58520 tokens, 311.8 s, prefill 376 tok/s, decode 47.0 tok/s, FOUND answer='quartz-heron-1000'
+needle stream 1: prompt 58506 tokens, 311.61 s, prefill 375 tok/s, decode 75769.1 tok/s, FOUND answer='amber-otter-1037'
+needle 2 streams x 2800 lines: 117026 prompt tokens in 312 s = 375 tok/s in all; ALL FOUND
+
+== live-250k bench
+prose: 34.7 tok/s (runs 34.7, 34.6; 492 tokens; text 8b994038)
+code: 46.0 tok/s (runs 45.8, 46.0; 512 tokens; text 75d3febe)
+
+== live-250k checks
+--- stop
+short answer: finish=stop tokens=3 0.4s loop=0.0 content=5ch think=5ch tail='Paris'
+medium answer: finish=stop tokens=120 3.7s loop=0.0 content=564ch think=54ch tail='why the back of a refrigerator feels warm while the inside stays cold.'
+max_tokens=1: finish=length tokens=1 0.2s loop=0.0 content=0ch think=1ch tail=''
+--- long
+essay 6000: finish=stop tokens=5154 139.2s loop=0.006 content=17521ch think=2480ch tail='ever enter a minimal child) is the key to implementing them correctly.'
+--- think
+thinking on: finish=stop tokens=161 4.5s loop=0.0 content=544ch think=52ch tail='le of how careful reading (or listening) matters more than quick math.'
+thinking code: finish=stop tokens=1094 23.0s loop=0.002 content=4168ch think=109ch tail='ng silently "fixed," since that usually indicates a bug in the caller.'
+--- sampled
+temp 0.8 seed 1: finish=stop tokens=416 14.0s loop=0.0 content=1862ch think=96ch tail=', the light flickers oddly—like someone watching, still keeping watch.'
+temp 0.8 seed 2: finish=stop tokens=422 13.8s loop=0.0 content=1818ch think=89ch tail='a keeper.\n\nThere is a difference, and eleven families know what it is.'
+--- drop
+dropped after 0.05s (479 bytes seen); next request: stop in 0.6s
+dropped after 0.5s (6181 bytes seen); next request: stop in 0.1s
+dropped after 3.0s (28139 bytes seen); next request: stop in 0.2s
+--- dropmany
+survivor 1: finish=stop tokens=215 10.6s loop=0.0 content=996ch think=36ch tail='ber 1 is where everything starts—and sometimes, where everything ends.'
+survivor 3: finish=stop tokens=221 12.0s loop=0.0 content=1020ch think=36ch tail='e—the minimum needed for complexity, stability, and meaning to emerge.'
+after drops, 4 at once #0: finish=stop tokens=214 10.9s loop=0.0 content=1112ch think=76ch tail='ial simultaneously: the paradox of nothing that makes everything work.'
+after drops, 4 at once #1: finish=stop tokens=215 10.0s loop=0.0 content=996ch think=36ch tail='ber 1 is where everything starts—and sometimes, where everything ends.'
+after drops, 4 at once #2: finish=stop tokens=199 18.6s loop=0.0 content=895ch think=36ch tail='mething new becomes possible: dialogue, comparison, and companionship.'
+after drops, 4 at once #3: finish=stop tokens=221 20.5s loop=0.0 content=1020ch think=36ch tail='e—the minimum needed for complexity, stability, and meaning to emerge.'
+--- title
+title beside dropped stream: finish=stop tokens=15 1.4s loop=0.0 content=31ch think=28ch tail='**Melting Giants: Ice Retreat**'
+request after: finish=stop tokens=2 0.4s loop=0.0 content=2ch think=0ch tail='ok'
+--- over
+7 at once (4 lanes) #0: finish=stop tokens=269 12.0s loop=0.0 content=727ch think=414ch tail='ives shape to what surrounds it, just as zero makes counting possible.'
+7 at once (4 lanes) #1: finish=length tokens=300 13.9s loop=0.0 content=797ch think=564ch tail='fuses the spectrum entirely, existing as pure form: a vertical stroke,'
+7 at once (4 lanes) #2: finish=length tokens=300 38.4s loop=0.0 content=637ch think=669ch tail=', partnership, moonlight and water, often rendered in silvery white or'
+7 at once (4 lanes) #3: finish=stop tokens=213 24.2s loop=0.0 content=792ch think=261ch tail=' frequency of human meaning, vibrating wherever things come in threes.'
+7 at once (4 lanes) #4: finish=stop tokens=258 24.5s loop=0.0 content=756ch think=437ch tail="lue because someone's mind decided so—and for them, it always will be."
+7 at once (4 lanes) #5: finish=stop tokens=287 37.6s loop=0.0 content=798ch think=490ch tail=', our imaginations keep painting it anyway—stubbornly, vividly yellow.'
+7 at once (4 lanes) #6: finish=stop tokens=241 44.9s loop=0.0 content=794ch think=277ch tail='ke a colour you could sink into—steady, dense, and quietly protective.'
+--- tool
+tool call: finish=tool_calls tokens=11 1.0s loop=0.0 content=0ch think=0ch tail=''
+  tool_calls: [{"id": "call_1791846856307_0", "type": "function", "function": {"name": "get_weather", "arguments": "{\"city\":\"Paris\"}"}}]
+--- longprompt
+~25K prompt: finish=stop tokens=15 60.5s loop=0.0 content=3ch think=39ch tail='222'
+same prompt again: finish=stop tokens=16 7.6s loop=0.0 content=3ch think=36ch tail='532'
+small after long: finish=stop tokens=2 0.3s loop=0.0 content=2ch think=0ch tail='ok'
+--- done
+
+== live-250k lowest free memory on a node: 12 GB
+== live-250k window events
+2026-10-12 18:51:24 live-250k: up (preset 250k)
+2026-10-12 18:57:07 live-250k: rc=0 18:57:06 SERVING after 335 s: http://10.100.10.1:18992/v1 (model name: model)
+2026-10-12 18:57:07 live-250k container: ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12-r2 mounts /model ; serve: 6-bit output head /model/lm_head-6bit/lm_head-6bit.safetensors
+2026-10-12 18:59:21 live-250k streams bench: prose x 1: aggregate 35.0 tok/s (492 tokens in 14.0 s); per stream 35.0|prose x 2: aggregate 46.4 tok/s (1004 tokens in 21.6 s); per stream 22.8, 24.0|code x 1: aggregate 45.6 tok/s (512 tokens in 11.2 s); per stream 45.6|code x 2: aggregate 53.0 tok/s (1024 tokens in 19.3 s); per stream 33.0, 26.6
+2026-10-12 19:03:29 live-250k two at once vs one at a time: 8 of 8 replies identical
+2026-10-12 19:08:40 live-250k needle 2 streams x 2800 lines: 117026 prompt tokens in 312 s = 375 tok/s in all; ALL FOUND
+2026-10-12 19:09:32 live-250k bench: prose: 34.7 tok/s (runs 34.7, 34.6; 492 tokens; text 8b994038) code: 46.0 tok/s (runs 45.8, 46.0; 512 tokens; text 75d3febe)
+2026-10-12 19:15:24 live-250k checks done (27 replies, 0 error lines)
+2026-10-12 19:15:27 live-250k memory: lowest  12 GB in the run; now 12/12/12/12 GB
+2026-10-12 19:15:27 live-250k PASS
+engine: info: glm53 rank 0: 2 streams x 250003 tokens, cache split over 4 ranks: 11.3 GiB of caches here, 45.9 GiB free, 34.6 GiB left after them (reserve 20.0)
+engine: info: glm53 rank 0: 2 concurrent streams (MTP drafts 2, windows up to 18 rows), 5.68 GiB of caches each (250000 tokens); draft cut 0.6 from 4 streams

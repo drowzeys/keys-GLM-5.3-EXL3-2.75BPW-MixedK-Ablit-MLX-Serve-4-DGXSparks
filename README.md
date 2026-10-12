@@ -8,11 +8,11 @@ engine does the forward pass, drafting and sampling on all four. One prebuilt im
 
 | | |
 |---|---|
-| Image | `ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12` (= `latest`) |
+| Image | `ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12-r2` (= `latest`) |
 | Weights | [drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated](https://huggingface.co/drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated) (gated, automatic approval) |
 | Drafter (in the image) | [drowzeys/keys-GLM-5.3-speculator.dspark-ft2](https://huggingface.co/drowzeys/keys-GLM-5.3-speculator.dspark-ft2), GLM-5.3 License |
 | Endpoint | `http://<rank 0>:18992/v1`, OpenAI- and Anthropic-compatible, model name `model`, no authentication |
-| Measured configurations | 32K context × 4 streams (default), 64K × 2 (`PRESET=64k`), 1M × 1 (`PRESET=1m`) |
+| Measured configurations | 32K context × 4 streams (default), 64K × 2 (`PRESET=64k`), 250K × 2 (`PRESET=250k`), 1M × 1 (`PRESET=1m`) |
 
 ## Performance
 
@@ -32,7 +32,8 @@ Speeds vary by about 9 % from one load to the next on this cluster.
 
 ### Other context sizes
 
-`PRESET=64k ./one-shot.sh up` and `PRESET=1m ./one-shot.sh up` use a second kernel pack in the image.
+`PRESET=64k ./one-shot.sh up` and `PRESET=1m ./one-shot.sh up` use a second kernel pack in the image, and so does
+`PRESET=250k` (two streams of 250,000 tokens, [below](#image-2026-10-12-r2-two-long-context-streams-preset250k)).
 
 | | Default | `PRESET=64k` | `PRESET=1m` |
 |---|---|---|---|
@@ -49,6 +50,54 @@ Speeds vary by about 9 % from one load to the next on this cluster.
   4 GB (`TF_GLM53_CACHE_GIB=4`). Measured from image `2026-10-10-r4`: `evidence/2026-10-10/r4-*.log`.
 - **`PRESET=64k`** was measured on the previous image tag with this kernel pack mounted from disk, not started from
   this tag.
+
+## Image `2026-10-12-r2`: two long-context streams (`PRESET=250k`)
+
+Built on [mlx-serve](https://github.com/ddalcu/mlx-serve) by David Dalcu, a third-party inference engine (see
+[NOTICE.md](NOTICE.md)), [exllamav3](https://github.com/turboderp-org/exllamav3) by turboderp (the EXL3 format and
+quantizer) and GLM-5.3 by [Z.ai](https://huggingface.co/zai-org).
+
+`2026-10-12-r2` is `2026-10-12` with one addition: **two streams of 250,000 tokens each**. Until now more than one
+stream meant every stream kept its whole cache on every Spark, which is why the shapes stopped at 32K × 4 and
+64K × 2. The new preset splits the cache across the four Sparks as `PRESET=1m` does and gives each stream its own rows
+of it.
+
+```sh
+for n in $NODES; do ssh $n docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12-r2; done
+PRESET=250k ./one-shot.sh up        # 250,000 tokens × 2 streams
+```
+
+Measured from the image as published, these weights, four DGX Sparks, thinking on, greedy, 512 tokens
+(`evidence/2026-10-12-r2/`):
+
+| | `PRESET=250k` (250,000 × 2) | `PRESET=1m` (1,000,000 × 1), same image |
+|---|---|---|
+| Prose, one request | 34.7 tok/s | 33.1 and 33.9 tok/s (two runs of the bench) |
+| Code, one request | 46.0 tok/s | 44.1 and 44.6 tok/s |
+| Prose, two requests at once: each / together | 22.8 and 24.0 / **46.4 tok/s** | one at a time |
+| Code, two requests at once: each / together | 33.0 and 26.6 / **53.0 tok/s** | one at a time |
+| Two 58K-token prompts at once, a different passphrase at half depth in each | both found; 117,026 prompt tokens in 312 s (375 tok/s in all) | not run on this tag |
+| 25K-token prompt, first time / changed last line | 60.5 s / 7.6 s | 61.3 s / 7.7 s |
+| Replies with two requests at once against one at a time (8 prompts, 41 to 18,840 tokens) | 8 of 8 identical | |
+| Checks (`bench/checks.py`) | 27 replies, no errors | 27 replies, no errors |
+| Memory left on each node | 12 GB | 9 GB |
+| Load time | 335 s | 317 s |
+
+- **Measured on the unmodified 2.75 bpw pack with the same image build:** two 106K-token prompts at once, both
+  passphrases found, 213,023 prompt tokens in 575 s; prose 36.0 tok/s alone and 47.1 together; code 48.6 alone and
+  47.7 together (no gain on that run).
+- **What it costs:** as in `PRESET=1m`, prompts are read at about 370 tok/s, about 2.5 times slower than the default
+  shape, and two prompts being read at once share that rate. One request alone decodes at the `1m` rate, not the
+  default shape's. The dense copy of the MTP layer is off, as in `1m`.
+- **Two streams, not more.** Four streams with the cache split ran a node out of memory while loading in our tests;
+  the engine now refuses those shapes when it starts. 262,144 × 2 served correctly on the unmodified pack but left
+  8 GB on a node against 12 GB here, so the launcher offers `250k` only.
+- **`PRESET=1m` on this tag read 3 to 5 % lower than on `2026-10-12` earlier the same day** (35.2 and 46.0 tok/s
+  there), with identical benchmark texts. On the unmodified pack the two tags gave the same `1m` speed (36.2 / 48.4
+  against 36.0 / 48.4), and speeds on this cluster vary by several percent from one load to the next; each shape was
+  loaded once.
+- **Limits:** measured with the DSpark drafter only. Prompts beyond 58K tokens a stream were not tried on these
+  weights. The default 32K × 4 and `64k` shapes were not started from this tag with these weights.
 
 ## Image `2026-10-12`: a 6-bit output head and a lighter health check
 
@@ -109,7 +158,7 @@ export MODEL=/models/keys-GLM-5.3-EXL3-2.75BPW-Abliterated  # the same path on a
 
 hf download drowzeys/keys-GLM-5.3-EXL3-2.75BPW-Abliterated --local-dir $MODEL    # once, ~250 GB, on every node or a share
 # already have the checkpoint? fetch the 6-bit output head only (714 MB): add  --include "lm_head-6bit/*"
-for n in $NODES; do ssh $n docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12; done
+for n in $NODES; do ssh $n docker pull ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12-r2; done
 for n in $NODES; do scp node/gb10-node-settings.sh $n:/tmp/ && ssh -t $n sudo /tmp/gb10-node-settings.sh; done   # after every reboot
 
 ./one-shot.sh check     # must end with "check: OK"
@@ -143,7 +192,7 @@ Everything is under `/opt/keys-glm53`; the entry point is `/opt/keys-glm53/serve
 | mlx-serve | `main` of 2026-10 with a bridge that loads the engine as a library | HTTP server on rank 0: chat template, tool calls, streaming |
 | DSpark ft2 drafter | `draft/dspark-ft2` | Speculative drafts (confidence policy, 0.3) |
 | Kernel packs and tile tables | `aot/`, `ref/` | Precompiled decode kernels for 32K context and 4 streams |
-| Wide kernel pack | `aot-wide/`, `ref-wide/` | Kernels for the `64k` and `1m` presets (built with engine 1.0.4's generator) |
+| Wide kernel pack | `aot-wide/`, `ref-wide/` | Kernels for the `64k`, `250k` and `1m` presets (built with engine 1.0.4's generator, plus 24 variants for two streams with the cache split) |
 | Licenses | `licenses/` | The engine's and mlx-serve's licenses and their third-party notices |
 
 ## What this build changes
@@ -154,6 +203,7 @@ Everything is under `/opt/keys-glm53`; the entry point is `/opt/keys-glm53/serve
 | Prompt reuse keeps a point every 4,096 tokens (`TF_GLM53_REUSE_STRIDE`) | A long prompt with a changed ending resumes from the last shared point: 23 s to 3.3 s on a 25K prompt |
 | Engine merged onto upstream engine 1.0.7 (tag `2026-10-11`) | Same replies as `2026-10-10-r4`: in the `1m` preset the prose and code benchmark texts are identical and the speed is the same (35.2 and 44.6 tok/s against 35.0 and 44.7). All checks pass (`evidence/2026-10-11/`). The default and `64k` shapes were not re-measured on this tag with these weights; the tables above are from `2026-10-10-r4` |
 | 6-bit output head and a lighter health check (tag `2026-10-12`) | See the section above: code 44.4 to 46.0 tok/s in `PRESET=1m`, KL +0.0001 |
+| Two streams with the cache split across the Sparks (tag `2026-10-12-r2`, `PRESET=250k`) | 250,000 tokens × 2 streams; replies identical to one request at a time; prose 34.7 tok/s alone, 46.4 together |
 | A client that leaves cancels its reply at once (tag `2026-10-10-r4`) | With one stream a dropped reply used to run to its end and hold the next request (40 s for a 1,400-token reply); now 0.2 to 0.7 s |
 | Thinking defaults to High effort | GLM-5.3's template runs at Max effort when no effort is named, which spends thousands of tokens on reasoning. High keeps the reasoning short |
 | `enable_thinking: false` is served as Low effort | GLM-5.3's template has no thinking-off form; forcing one made the model rewrite its answer several times |
@@ -165,7 +215,7 @@ Everything is under `/opt/keys-glm53`; the entry point is `/opt/keys-glm53/serve
 | `NODES` | required | Four fabric addresses, rank 0 first |
 | `MODEL` | required | Checkpoint directory, the same path on all four |
 | `DRAFTER` | `dspark` | `dspark`: the drafter in the image. `mtp`: GLM-5.3's own MTP layer, no extra model. `dflash`: a DFlash2 directory you supply with `DRAFT=` |
-| `PRESET` | unset | `64k`: 65,536 tokens × 2 streams. `1m`: 1,000,000 tokens × 1 stream |
+| `PRESET` | unset | `64k`: 65,536 tokens × 2 streams. `250k`: 250,000 tokens × 2 streams. `1m`: 1,000,000 tokens × 1 stream |
 | `HEAD_Q` | unset | Unset: the 6-bit output head when `$MODEL/lm_head-6bit/lm_head-6bit.safetensors` exists, else the bf16 head. `off`: the bf16 head |
 | `CONTEXT` / `PARALLEL` | the preset's (`32768` / `4`) | Context window and concurrent streams |
 | `PORT` | `18992` | HTTP port on rank 0 |
@@ -176,10 +226,10 @@ Per request: `reasoning_effort` (`low`, `high`, `max`) chooses how long the mode
 
 ## Limits
 
-- Three shapes were measured: 32K × 4, 64K × 2 and 1M × 1. Another context or stream count may need kernels the image
-  does not hold. More than one stream is limited to 200,000 tokens each, and each stream holds its own cache on every
-  rank.
-- `PRESET=1m` serves one request at a time; a second request waits. Prompts are read about 2.5 times slower than in the default shape.
+- Four shapes were measured: 32K × 4, 64K × 2, 250K × 2 and 1M × 1. Another context or stream count may need kernels
+  the image does not hold. In the default and `64k` shapes each stream holds its own cache on every rank; `250k` and
+  `1m` split the cache across the ranks. With the cache split the engine serves at most two streams.
+- `PRESET=1m` serves one request at a time; a second request waits. Prompts are read about 2.5 times slower than in the default shape, in `250k` too.
 - Exact lookups in a long prompt are less reliable at the default High effort, in every shape. On a 1,400-entry list
   (23K tokens), 82 lookups: High got 73 right at 1M and 76 at 64K, usually returning a neighbouring entry; Max
   (`"reasoning_effort": "max"`) got 81 in both. Use Max when an answer depends on one exact line far back in the
