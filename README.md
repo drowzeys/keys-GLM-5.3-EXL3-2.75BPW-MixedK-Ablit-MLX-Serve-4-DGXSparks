@@ -149,6 +149,36 @@ binaries just before they were packaged (`long-replies.log`); the rest ran on th
 
 ## Quick start
 
+### One script (new clusters)
+
+On a machine with key-based ssh to the four Sparks (one of them is fine):
+
+```sh
+git clone https://github.com/drowzeys/keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-4-DGXSparks && cd keys-GLM-5.3-EXL3-2.75BPW-MixedK-Ablit-MLX-Serve-4-DGXSparks
+HF_TOKEN=<your token> ./install.sh <spark1> <spark2> <spark3> <spark4>   # the four fabric addresses, rank 0 first
+./one-shot.sh up && ./one-shot.sh bench
+```
+
+`install.sh` checks each Spark (ssh, GB10 and memory, Docker with GPU access, the RoCE devices, disk space), applies
+the two kernel settings a rank needs, pulls the image and checks its digest, downloads the checkpoint and the 6-bit
+output head to `~/models/GLM-5.3-EXL3-2.75BPW-Abliterated` on each Spark (resumable; `VERIFY=1` also checks every
+file's sha256), writes `my-cluster.env`, which `one-shot.sh` reads, and runs the start check.
+
+| Setting | Meaning |
+|---|---|
+| `HF_TOKEN` | The weights repository is gated with automatic approval: accept its terms on huggingface.co first. Without the variable, the token `hf auth login` saved on each Spark is used |
+| `MODEL=<directory>` | Where the checkpoint goes, the same path on all four |
+| `SHARED=1` | `MODEL` is one shared directory all four mount: download once (`SHARED_HOST=<address>` names the machine that can write to it) |
+| `SKIP_WEIGHTS=1` | The checkpoint is already at `MODEL` |
+
+- **The container image is still private** as of 2026-10-12, so the pull works only for accounts with access until
+  the package is made public.
+- **Tested here:** the installer's checks, image step and settings file ran against our four Sparks, and the download
+  path ran on the repository's small files with a token. A full download through it and a start from a directory it
+  filled were run for the stock checkpoint's recipe, which shares this script, not for this one.
+
+### By hand
+
 On a machine with passwordless ssh to the four Sparks:
 
 ```sh

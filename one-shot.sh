@@ -2,7 +2,7 @@
 # Full GLM-5.3 EXL3 2.75 bpw (abliterated) on four DGX Sparks: mlx-serve on rank 0 with the GLM-5.3 CUDA
 # inference engine at tensor parallel 4, ranks 1..3 following. One container a Spark, started over ssh from any machine.
 #   ./one-shot.sh check | up | down | status | bench
-# Settings (environment, or `source cluster.env` first):
+# Settings (environment; ./install.sh writes them to my-cluster.env):
 #   NODES    the four Sparks' fabric addresses, rank 0 first (required)
 #   MODEL    the checkpoint directory, the same path on all four (required)
 #   IMAGE    [ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12-r2]
@@ -15,16 +15,20 @@
 #   HEAD_Q   unset: the 6-bit output head when $MODEL/lm_head-6bit/lm_head-6bit.safetensors exists (about 3 % faster
 #            decode, KL +0.0001), else the bf16 head | off: the bf16 head
 #   DOCKER_ARGS  extra `docker run` arguments for every rank (e.g. -v a kernel pack for another context)
+# New here? ./install.sh <four addresses> checks the Sparks, pulls the image, downloads the weights and writes
+# my-cluster.env, which this script reads when NODES is not set.
 set -u
+HERE=$(cd "$(dirname "$0")" && pwd)
+[ -n "${NODES:-}" ] || [ ! -f $HERE/my-cluster.env ] || . $HERE/my-cluster.env
 read -r -a NODES <<<"${NODES:-}"
-[ ${#NODES[@]} = 4 ] || { echo "NODES must list four fabric addresses, rank 0 first"; exit 2; }
+[ ${#NODES[@]} = 4 ] || { echo "NODES must list four fabric addresses, rank 0 first (new here? ./install.sh <four addresses> sets everything up)"; exit 2; }
 MODEL=${MODEL:-}; DRAFT=${DRAFT:-}; DRAFTER=${DRAFTER:-dspark}
 IMAGE=${IMAGE:-ghcr.io/drowzeys/keys-glm53-exl3-275-ablit-4-dgxsparks:2026-10-12-r2}
 PRESET=${PRESET:-}
 case "$PRESET" in "") c=32768 p=4 ;; 64k) c=65536 p=2 ;; 250k) c=250000 p=2 ;; 1m) c=1000000 p=1 ;;
   *) echo "PRESET=$PRESET (64k, 250k or 1m)"; exit 2 ;; esac
 CONTEXT=${CONTEXT:-$c}; PARALLEL=${PARALLEL:-$p}; PORT=${PORT:-18992}; RAILS=${RAILS:-2}; MEM=${MEM:-110g}; RDV=${RDV:-29882}
-HERE=$(cd "$(dirname "$0")" && pwd); RUN=${RUN:-$HERE/run}
+RUN=${RUN:-$HERE/run}
 rsh() { ssh -o ConnectTimeout=10 -o BatchMode=yes "$@"; }
 say() { echo "$(date +%H:%M:%S) $*" | tee -a $RUN/events.log; }
 down() { for n in "${NODES[@]}"; do rsh $n 'docker ps -aq --filter label=keys-glm53 | xargs -r docker rm -f' >/dev/null 2>&1 & done; wait; }
